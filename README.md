@@ -27,7 +27,7 @@ CampusLore is a Reddit-style anonymous Q&A platform for JIIT students. Visitors 
 ### 1) Open the project folder
 
 ```bash
-cd /home/aarushb/Documents/CampusLore
+cd CampusLore
 ```
 
 ### 2) Create and activate a virtual environment
