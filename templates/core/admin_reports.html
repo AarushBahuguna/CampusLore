@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Admin Reports{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-graph-up"></i> Admin Reports & Statistics</h3>
+    <div class="d-flex gap-2">
+        <div class="dropdown">
+            <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'export_csv' %}?type=questions">Questions by Category</a></li>
+                <li><a class="dropdown-item" href="{% url 'export_csv' %}?type=activity">Activity (30 days)</a></li>
+                <li><a class="dropdown-item" href="{% url 'export_csv' %}?type=validation">Validation Stats</a></li>
+            </ul>
+        </div>
+        <a href="{% url 'export_pdf' %}" class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+        </a>
+    </div>
+</div>
+
+<!-- Overview Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ total_questions }}</h2>
+                <p class="text-muted mb-0">Total Questions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-success">{{ total_answers }}</h2>
+                <p class="text-muted mb-0">Total Answers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-info">{{ total_users }}</h2>
+                <p class="text-muted mb-0">Active Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-warning">{{ pending_reports }}</h2>
+                <p class="text-muted mb-0">Pending Reports</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Activity (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Questions posted:</strong> {{ recent_questions }}</p>
+                <p><strong>Answers posted:</strong> {{ recent_answers }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Questions by Category</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for cat in category_stats %}
+                <div class="list-group-item d-flex justify-content-between">
+                    {{ cat.name }}
+                    <span class="badge bg-primary rounded-pill">{{ cat.num_questions }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Contributors & Pending Reports -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Top Contributors (Anonymous)</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr><th>#</th><th>Reputation</th><th>Badge</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for user in top_contributors %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ user.reputation_score }}</strong></td>
+                            <td>{{ user.badge }}</td>
+                            <td><span class="badge bg-{{ user.account_status|default:'active' }}">{{ user.account_status }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted">No contributors yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0">Pending Reports</h5>
+                <a href="/admin/core/report/" class="btn btn-sm btn-outline-primary">Manage in Admin</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for report in pending_report_list %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <small class="text-muted">{{ report.content_type }} #{{ report.object_id }}</small>
+                            <p class="mb-0 small">{{ report.reason|truncatewords:15 }}</p>
+                        </div>
+                        <small class="text-muted">{{ report.created_at|timesince }} ago</small>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="list-group-item text-center text-muted py-3">
+                    No pending reports 🎉
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

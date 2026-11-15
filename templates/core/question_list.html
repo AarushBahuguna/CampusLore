@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Questions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-chat-left-text"></i> All Questions</h3>
+    {% if user.is_authenticated %}
+    <a href="{% url 'question_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Ask a Question
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small">Category</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}"
+                        {% if current_category == cat.pk|stringformat:"d" %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option value="open" {% if current_status == "open" %}selected{% endif %}>Open</option>
+                    <option value="resolved" {% if current_status == "resolved" %}selected{% endif %}>Resolved</option>
+                    <option value="closed" {% if current_status == "closed" %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Sort By</label>
+                <select name="sort" class="form-select form-select-sm">
+                    <option value="newest" {% if current_sort == "newest" %}selected{% endif %}>Newest</option>
+                    <option value="oldest" {% if current_sort == "oldest" %}selected{% endif %}>Oldest</option>
+                    <option value="popular" {% if current_sort == "popular" %}selected{% endif %}>Most Popular</option>
+                    <option value="most_answers" {% if current_sort == "most_answers" %}selected{% endif %}>Most Answers</option>
+                    <option value="unanswered" {% if current_sort == "unanswered" %}selected{% endif %}>Unanswered</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Tag</label>
+                <input type="text" name="tag" class="form-control form-control-sm"
+                       value="{{ current_tag|default:'' }}" placeholder="Filter by tag">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Question List -->
+{% for q in page_obj %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h5 class="mb-1">
+                    <a href="{% url 'question_detail' pk=q.pk %}" class="text-decoration-none">
+                        {{ q.title }}
+                    </a>
+                </h5>
+                <p class="text-muted mb-2">{{ q.description|truncatewords:30 }}</p>
+                <div>
+                    <span class="badge bg-secondary">{{ q.category.name }}</span>
+                    {% for tag in q.tag_list %}
+                    <span class="badge bg-light text-dark">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                <small class="text-muted">
+                    <span class="anon-name">{{ q.anon_display_name }}</span>
+                    &middot; {{ q.created_date|timesince }} ago
+                </small>
+            </div>
+            <div class="text-end" style="min-width: 120px;">
+                <div class="mb-1">
+                    <span class="badge bg-primary">{{ q.num_answers }} answers</span>
+                </div>
+                <div class="mb-1">
+                    <span class="badge bg-light text-dark">{{ q.view_count }} views</span>
+                </div>
+                <span class="badge badge-status-{{ q.status }}">{{ q.status }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-chat-left-text" style="font-size: 3rem;"></i>
+    <p class="mt-2">No questions found matching your filters.</p>
+</div>
+{% endfor %}
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}">Previous</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

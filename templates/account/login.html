@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card mt-5">
+            <div class="card-body text-center p-5">
+                <h2 class="mb-3"><i class="bi bi-mortarboard-fill text-primary"></i></h2>
+                <h3 class="card-title mb-2">Welcome to CampusLore</h3>
+                <p class="text-muted mb-4">
+                    Sign in with your JIIT college email to ask questions,
+                    share answers, and contribute to the campus knowledge base.
+                </p>
+
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle"></i>
+                    Only <strong>@mail.jiit.ac.in</strong> email addresses are accepted.
+                </div>
+
+                {% if form %}
+                    <form method="POST" action="{% url 'account_login' %}">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary w-100 mb-3">Sign In</button>
+                    </form>
+                {% endif %}
+
+                {% load socialaccount %}
+                {% get_providers as socialaccount_providers %}
+                {% if socialaccount_providers %}
+                    <hr>
+                    <p class="text-muted small">Sign in with Google</p>
+                    {% for provider in socialaccount_providers %}
+                        {% if provider.id == "google" %}
+                            <a href="{% provider_login_url 'google' %}"
+                               class="btn btn-outline-dark w-100">
+                                <i class="bi bi-google"></i> Sign in with Google
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                <hr>
+                <p class="text-muted small mt-3">
+                    You can browse questions without signing in, but you need
+                    to sign in to ask, answer, or vote.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

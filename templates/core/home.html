@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="p-4 mb-4 bg-dark text-white rounded-3">
+    <div class="container">
+        <h1 class="fw-bold"><i class="bi bi-mortarboard-fill"></i> CampusLore</h1>
+        <p class="lead mb-2">Anonymous Crowd-Sourced Knowledge Network for JIIT Students</p>
+        <p class="text-light">Ask questions, share experiences, and build a searchable knowledge base — all anonymously.</p>
+        <div class="d-flex gap-3">
+            <span class="badge bg-primary fs-6">{{ total_questions }} Questions</span>
+            <span class="badge bg-success fs-6">{{ total_answers }} Answers</span>
+            <span class="badge bg-info fs-6">{{ total_users }} Contributors</span>
+        </div>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'account_login' %}" class="btn btn-light mt-3">
+            <i class="bi bi-google"></i> Sign In to Contribute
+        </a>
+        {% else %}
+        <a href="{% url 'question_create' %}" class="btn btn-light mt-3">
+            <i class="bi bi-plus-circle"></i> Ask a Question
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Questions -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock"></i> Recent Questions</h5>
+                <a href="{% url 'question_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for q in recent_questions %}
+                <a href="{% url 'question_detail' pk=q.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">{{ q.title }}</h6>
+                            <small class="text-muted">
+                                <span class="anon-name">{{ q.anon_display_name }}</span>
+                                &middot; {{ q.category.name }}
+                                &middot; {{ q.created_date|timesince }} ago
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-secondary">{{ q.answer_count }} answers</span>
+                            <span class="badge badge-status-{{ q.status }}">{{ q.status }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="list-group-item text-center text-muted py-4">
+                    No questions yet. Be the first to ask!
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Popular Questions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-fire"></i> Popular Questions</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for q in popular_questions %}
+                <a href="{% url 'question_detail' pk=q.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between">
+                        <span>{{ q.title }}</span>
+                        <span class="badge bg-primary">{{ q.view_count }} views</span>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="list-group-item text-center text-muted py-3">
+                    No popular questions yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Categories -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-tags"></i> Trending Categories</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for cat in categories %}
+                <a href="{% url 'question_list' %}?category={{ cat.pk }}"
+                   class="list-group-item list-group-item-action d-flex justify-content-between">
+                    {{ cat.name }}
+                    <span class="badge bg-primary rounded-pill">{{ cat.num_questions }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Unanswered Questions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-question-circle"></i> Unanswered</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for q in unanswered_questions %}
+                <a href="{% url 'question_detail' pk=q.pk %}"
+                   class="list-group-item list-group-item-action">
+                    <small>{{ q.title|truncatewords:12 }}</small>
+                </a>
+                {% empty %}
+                <div class="list-group-item text-center text-muted py-3 small">
+                    All questions have been answered! 🎉
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Quick Links</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="https://www.jiit.ac.in/" target="_blank"
+                   class="list-group-item list-group-item-action">
+                    <i class="bi bi-globe"></i> JIIT Official Website
+                </a>
+                <a href="https://webportal.jiit.ac.in/jiitwebkiosk/" target="_blank"
+                   class="list-group-item list-group-item-action">
+                    <i class="bi bi-laptop"></i> JIIT Web Portal
+                </a>
+                <a href="{% url 'college_info' %}"
+                   class="list-group-item list-group-item-action">
+                    <i class="bi bi-building"></i> About JIIT
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

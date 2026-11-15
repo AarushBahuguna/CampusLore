@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CampusLore{% endblock %} | JIIT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; }
+        .card { border: none; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .badge-status-open { background-color: #198754; }
+        .badge-status-resolved { background-color: #0d6efd; }
+        .badge-status-closed { background-color: #6c757d; }
+        .vote-btn { cursor: pointer; }
+        .vote-btn:hover { opacity: 0.7; }
+        .anon-name { color: #6f42c1; font-weight: 600; }
+        #live-search-results { position: absolute; z-index: 1000; width: 100%;
+            max-height: 300px; overflow-y: auto; }
+        #similar-questions { max-height: 200px; overflow-y: auto; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="bi bi-mortarboard-fill"></i> CampusLore
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Search bar -->
+                <form class="d-flex mx-auto position-relative" style="width: 40%;"
+                      action="{% url 'search' %}" method="GET">
+                    <input class="form-control me-2" type="search" name="q"
+                           id="live-search-input" placeholder="Search questions..."
+                           autocomplete="off" value="{{ query|default:'' }}">
+                    <button class="btn btn-outline-light" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <div id="live-search-results" class="list-group" style="display:none;"></div>
+                </form>
+
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'question_list' %}">Questions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'college_info' %}">About JIIT</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'programs' %}">Programs</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-success btn-sm text-white ms-2"
+                               href="{% url 'question_create' %}">
+                                <i class="bi bi-plus-circle"></i> Ask
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown"
+                               role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i>
+                                {{ user.username|default:user.college_email }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                    <i class="bi bi-person"></i> Profile</a></li>
+                                {% if user.is_superuser %}
+                                <li><a class="dropdown-item" href="{% url 'admin_reports' %}">
+                                    <i class="bi bi-graph-up"></i> Reports</a></li>
+                                <li><a class="dropdown-item" href="/admin/">
+                                    <i class="bi bi-gear"></i> Admin Panel</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{% url 'account_logout' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="bi bi-box-arrow-right"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-light btn-sm ms-2"
+                               href="{% url 'account_login' %}">
+                                <i class="bi bi-google"></i> Sign In
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-3 mt-5">
+        <div class="container text-center">
+            <p class="mb-1">
+                <strong>CampusLore</strong> — Anonymous Knowledge Network for JIIT Students
+            </p>
+            <p class="mb-0 small text-muted">
+                <a href="https://www.jiit.ac.in/" target="_blank" class="text-muted">JIIT Website</a> |
+                <a href="https://webportal.jiit.ac.in/jiitwebkiosk/" target="_blank" class="text-muted">Web Portal</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // AJAX Live Search
+        const searchInput = document.getElementById('live-search-input');
+        const searchResults = document.getElementById('live-search-results');
+        let searchTimeout;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+                if (query.length < 2) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                searchTimeout = setTimeout(() => {
+                    fetch(`/api/search/?q=${encodeURIComponent(query)}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            searchResults.innerHTML = '';
+                            if (data.results.length === 0) {
+                                searchResults.style.display = 'none';
+                                return;
+                            }
+                            data.results.forEach(q => {
+                                const item = document.createElement('a');
+                                item.href = `/questions/${q.id}/`;
+                                item.className = 'list-group-item list-group-item-action';
+                                item.innerHTML = `
+                                    <div class="d-flex justify-content-between">
+                                        <span>${q.title}</span>
+                                        <small class="text-muted">${q.category}</small>
+                                    </div>`;
+                                searchResults.appendChild(item);
+                            });
+                            searchResults.style.display = 'block';
+                        });
+                }, 300);
+            });
+
+            // Hide results on click outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

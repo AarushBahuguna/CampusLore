@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% load core_tags %}
+{% block title %}{{ question.title }}{% endblock %}
+
+{% block content %}
+<!-- Question -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3>{{ question.title }}</h3>
+                <div class="mb-2">
+                    <span class="badge bg-secondary">{{ question.category.name }}</span>
+                    <span class="badge badge-status-{{ question.status }}">{{ question.status }}</span>
+                    {% for tag in question.tag_list %}
+                    <span class="badge bg-light text-dark">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if user.is_authenticated and question.author == user %}
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">Actions</button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'question_edit' pk=question.pk %}">
+                        <i class="bi bi-pencil"></i> Edit</a></li>
+                    {% if question.status == "open" %}
+                    <li>
+                        <form method="POST" action="{% url 'question_resolve' pk=question.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item">
+                                <i class="bi bi-check-circle"></i> Mark Resolved
+                            </button>
+                        </form>
+                    </li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'question_delete' pk=question.pk %}">
+                        <i class="bi bi-trash"></i> Delete</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <hr>
+        <div class="mb-3" style="white-space: pre-wrap;">{{ question.description }}</div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                Asked by <span class="anon-name">{{ question.anon_display_name }}</span>
+                &middot; {{ question.created_date|timesince }} ago
+                &middot; {{ question.view_count }} views
+            </small>
+            {% if user.is_authenticated %}
+            <a href="{% url 'report_content' content_type='question' object_id=question.pk %}"
+               class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-flag"></i> Report
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Answers Section -->
+<h4 class="mb-3">
+    <i class="bi bi-chat-right-text"></i> {{ answers|length }} Answer{{ answers|length|pluralize }}
+</h4>
+
+{% for answer in answers %}
+<div class="card mb-3" id="answer-{{ answer.pk }}">
+    <div class="card-body">
+        <div style="white-space: pre-wrap;">{{ answer.description }}</div>
+        <hr>
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-3 align-items-center">
+                <!-- Voting -->
+                {% if user.is_authenticated and answer.contributor != user %}
+                <div class="d-flex align-items-center gap-1">
+                    <button class="btn btn-sm {% if answer|get_user_vote:user == 'helpful' %}btn-success{% else %}btn-outline-success{% endif %} vote-btn"
+                            onclick="voteAnswer({{ answer.pk }}, 'helpful')" title="Helpful">
+                        <i class="bi bi-hand-thumbs-up"></i>
+                    </button>
+                    <span class="fw-bold" id="vote-count-{{ answer.pk }}">{{ answer.helpful_count }}</span>
+                    <button class="btn btn-sm {% if answer|get_user_vote:user == 'unhelpful' %}btn-danger{% else %}btn-outline-danger{% endif %} vote-btn"
+                            onclick="voteAnswer({{ answer.pk }}, 'unhelpful')" title="Unhelpful">
+                        <i class="bi bi-hand-thumbs-down"></i>
+                    </button>
+                </div>
+                <!-- Confirmation -->
+                <button class="btn btn-sm {% if answer|has_confirmed:user %}btn-info{% else %}btn-outline-info{% endif %}"
+                        onclick="confirmAnswer({{ answer.pk }})">
+                    <i class="bi bi-check2-circle"></i>
+                    I can confirm (<span id="confirm-count-{{ answer.pk }}">{{ answer.confirmation_count }}</span>)
+                </button>
+                {% else %}
+                <div class="d-flex align-items-center gap-1">
+                    <i class="bi bi-hand-thumbs-up text-success"></i>
+                    <span class="fw-bold">{{ answer.helpful_count }}</span>
+                    <span class="text-muted mx-1">|</span>
+                    <i class="bi bi-check2-circle text-info"></i>
+                    <span>{{ answer.confirmation_count }} confirmations</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <small class="text-muted">
+                    <span class="anon-name">{{ answer.anon_display_name }}</span>
+                    &middot; {{ answer.created_date|timesince }} ago
+                </small>
+                {% if user.is_authenticated %}
+                    {% if answer.contributor == user %}
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <form method="POST" action="{% url 'answer_delete' pk=answer.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger"
+                                            onclick="return confirm('Delete this answer?')">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'report_content' content_type='answer' object_id=answer.pk %}"
+                       class="btn btn-sm btn-outline-danger" title="Report">
+                        <i class="bi bi-flag"></i>
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="text-center py-4 text-muted">
+    <i class="bi bi-chat-right-text" style="font-size: 2rem;"></i>
+    <p class="mt-2">No answers yet. Be the first to answer!</p>
+</div>
+{% endfor %}
+
+<!-- Add Answer Form -->
+{% if user.is_authenticated %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-reply"></i> Your Answer</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{% url 'answer_create' question_pk=question.pk %}">
+            {% csrf_token %}
+            {{ answer_form.description }}
+            <button type="submit" class="btn btn-primary mt-2">
+                <i class="bi bi-send"></i> Post Answer
+            </button>
+            <small class="text-muted ms-2">Your identity will be hidden. You'll appear as a random JIITIAN.</small>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card mt-4 text-center py-4">
+    <div class="card-body">
+        <p class="text-muted mb-2">Sign in to post an answer</p>
+        <a href="{% url 'account_login' %}" class="btn btn-primary">
+            <i class="bi bi-google"></i> Sign In with Google
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let value = `; ${document.cookie}`;
+    let parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+function voteAnswer(answerId, voteType) {
+    fetch(`/answers/${answerId}/vote/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `vote_type=${voteType}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        document.getElementById(`vote-count-${answerId}`).textContent = data.helpful_count;
+        // Reload to update button states
+        location.reload();
+    });
+}
+
+function confirmAnswer(answerId) {
+    fetch(`/answers/${answerId}/confirm/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        document.getElementById(`confirm-count-${answerId}`).textContent = data.confirmation_count;
+        location.reload();
+    });
+}
+</script>
+{% endblock %}

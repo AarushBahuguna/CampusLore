@@ -1,0 +1,13 @@
+1. read the CampusLore project synopsis, make sure to only use the tools that are mentioned in the project synopsis
+2. the student should be able to login using their college email id only. the email id should end by "@mail.jiit.ac.in" (add gmail authentication for this)
+3. use minimal css for the first draft, css will be done after basic foundation is done
+4. create a readme file after the work is done which contains all the necessary information about how to start the django project and any other dependencies which are needed to be installed.
+the project will run in a virtual env so create a requirements file which will make it easy to install all the python packages used
+5. create another file which highlights all the functions/features made, how they are implemented and their working.
+6. any other questions, first ask, wait for my reply and only then proceed. 
+7. some things also have to be hardcoded. these things will be basic like details of the college (courses offered and their batch size), admin staff etc. i will create a separate text file for that.
+8. add the url to the college website too "https://www.jiit.ac.in/", webportal for students and teachers "https://webportal.jiit.ac.in/jiitwebkiosk/"
+9. read the college_details.txt for other college related information
+10. add a section for programs offered and batch size, i will update you with the data after i acquire it.
+11. make the project to be like a reddit type platform. if the user has not logged in they may see contents but cannot engage 
+12. whatever files you create, create them in the CampusLore folder, do not create artifacts inside antigravity

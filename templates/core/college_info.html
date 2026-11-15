@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}About JIIT{% endblock %}
+
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-building"></i> About {{ college.name }}</h3>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Leadership -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Leadership</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr><th>Name</th><th>Designation</th><th>Email</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for leader in college.leadership %}
+                        <tr>
+                            <td><strong>{{ leader.name }}</strong></td>
+                            <td>{{ leader.designation }}</td>
+                            <td>{{ leader.email|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Departments & HoDs -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Departments & HoDs</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr><th>Department</th><th>Head of Department</th><th>Designation</th><th>Ext</th><th>Email</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for dept in college.departments %}
+                        <tr>
+                            <td>{{ dept.name }}</td>
+                            <td><strong>{{ dept.hod }}</strong></td>
+                            <td>{{ dept.designation }}</td>
+                            <td>{{ dept.ext }}</td>
+                            <td><a href="mailto:{{ dept.email }}">{{ dept.email }}</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Campuses -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Campuses</h5>
+            </div>
+            <div class="card-body">
+                {% for campus in college.campuses %}
+                <h6>{{ campus.name }}</h6>
+                <p class="small">
+                    <i class="bi bi-pin-map"></i> {{ campus.address }}<br>
+                    <i class="bi bi-telephone"></i> {{ campus.phone }}<br>
+                    {% if campus.email %}
+                    <i class="bi bi-envelope"></i>
+                    <a href="mailto:{{ campus.email }}">{{ campus.email }}</a>
+                    {% endif %}
+                </p>
+                {% if not forloop.last %}<hr>{% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Quick Links</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ college.website }}" target="_blank"
+                   class="list-group-item list-group-item-action">
+                    <i class="bi bi-globe"></i> Official Website
+                </a>
+                <a href="{{ college.webportal }}" target="_blank"
+                   class="list-group-item list-group-item-action">
+                    <i class="bi bi-laptop"></i> Web Portal (Kiosk)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
