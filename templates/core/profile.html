@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="bi bi-person-circle" style="font-size: 4rem; color: #6f42c1;"></i>
+                <h4 class="mt-2">{{ profile_user.college_email }}</h4>
+                <p class="text-muted">
+                    {{ profile_user.get_branch_display|default:"—" }} &middot;
+                    {{ profile_user.get_year_display|default:"—" }}
+                </p>
+                <span class="badge bg-primary fs-6">{{ profile_user.badge }}</span>
+                <hr>
+                <div class="row text-center">
+                    <div class="col">
+                        <h5>{{ profile_user.reputation_score }}</h5>
+                        <small class="text-muted">Reputation</small>
+                    </div>
+                    <div class="col">
+                        <h5>{{ user_questions.count }}</h5>
+                        <small class="text-muted">Questions</small>
+                    </div>
+                    <div class="col">
+                        <h5>{{ user_answers.count }}</h5>
+                        <small class="text-muted">Answers</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <!-- My Questions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-chat-left-text"></i> My Questions</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for q in user_questions %}
+                <a href="{% url 'question_detail' pk=q.pk %}"
+                   class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>{{ q.title }}</strong>
+                            <br><small class="text-muted">
+                                {{ q.category.name }} &middot; {{ q.created_date|timesince }} ago
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary">{{ q.answer_count }} answers</span>
+                            <span class="badge badge-status-{{ q.status }}">{{ q.status }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="list-group-item text-center text-muted py-3">
+                    You haven't asked any questions yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- My Answers -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-chat-right-text"></i> My Answers</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for a in user_answers %}
+                <a href="{% url 'question_detail' pk=a.question.pk %}"
+                   class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>{{ a.question.title|truncatewords:10 }}</strong>
+                            <br><small class="text-muted">
+                                {{ a.created_date|timesince }} ago
+                                &middot; {{ a.helpful_count }} helpful votes
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge bg-info">{{ a.confirmation_count }} confirmations</span>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="list-group-item text-center text-muted py-3">
+                    You haven't answered any questions yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

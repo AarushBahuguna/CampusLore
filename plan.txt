@@ -1,0 +1,198 @@
+# CampusLore — Working Plan (Revised)
+
+## Project Summary
+**CampusLore** is an anonymous, crowd-sourced Q&A web application for college students at JIIT Noida — a **Reddit-style platform** where anyone can browse content, but only students authenticated via `@mail.jiit.ac.in` Google login can post questions, answer, vote, or report. The community validates answers via votes and confirmations. College details (departments, HoDs, campus info, website links) are hardcoded.
+
+---
+
+## Tech Stack (as specified in synopsis)
+| Layer | Technology |
+|---|---|
+| Frontend | HTML5, CSS3, JavaScript, AJAX, Bootstrap |
+| Backend | Python, Django |
+| Database | SQLite (dev) |
+| Tools | Django ORM/Forms/Admin, CSV module, ReportLab, Git |
+
+> [!IMPORTANT]
+> - Minimal CSS for first draft (Bootstrap only); styling polish comes later.
+> - Google OAuth restricted to `@mail.jiit.ac.in` emails only.
+> - Reddit-style: unauthenticated users can **browse** but **cannot** post, answer, vote, or report.
+> - All project files created inside `/home/aarushb/Documents/CampusLore/`.
+> - Anonymous display names are **randomly generated** (e.g., "Curious Owl #42").
+> - Branch and year are **mandatory** during registration/profile setup.
+> - Admin reports accessible to **Django superusers only**.
+
+---
+
+## Resolved Decisions
+| # | Decision |
+|---|---|
+| 1 | Anonymous display names → **randomly generated** (e.g., "Curious Owl #42", "Silent Fox #17") |
+| 2 | Branch & Year → **mandatory** (collected on first login / profile completion) |
+| 3 | Admin reports → **superuser-only** access |
+
+---
+
+## Phase 1 — Project Setup & Authentication
+**Goal:** Django project scaffolding + Google OAuth login restricted to college emails.
+
+1. Create Django project (`campuslore`) and main app (`core`) inside `/home/aarushb/Documents/CampusLore/`.
+2. Set up `requirements.txt` with: Django, `django-allauth` (Google OAuth), `reportlab`, etc.
+3. Configure `django-allauth` for Google authentication.
+4. Custom allauth adapter to **reject** emails not ending in `@mail.jiit.ac.in`.
+5. Custom User model extending Django's `AbstractUser` with fields: `college_email`, `branch` (mandatory), `year` (mandatory), `account_status`, `reputation_score`.
+6. On first Google login, redirect to a **profile completion page** to fill mandatory branch & year.
+7. Login / Logout / Profile pages (minimal Bootstrap CSS).
+8. **Reddit-style access:** unauthenticated visitors can view all public pages (questions, answers, dashboard) but all engagement actions (post, answer, vote, report) require login.
+
+**Deliverable:** A user can sign in with Google (`@mail.jiit.ac.in` only), complete their profile, browse without logging in, and log out.
+
+---
+
+## Phase 2 — Database Models, Admin & Hardcoded College Data
+**Goal:** All core database entities + Django Admin + hardcoded JIIT data.
+
+1. **Models:**
+   - `Category` — name, description
+   - `Question` — title, description, category (FK), tags, created_date, author (FK to User), anon_display_name (randomly generated), status (open/resolved/closed)
+   - `Answer` — question (FK), description, contributor (FK to User), created_date, helpful_count, confirmation_count, anon_display_name
+   - `Vote` — answer (FK), user (FK), vote_type (helpful / unhelpful)
+   - `Report` — reported_item_type, reported_item_id, reporting_user (FK), reason, status (pending/reviewed/resolved)
+   - `Confirmation` — answer (FK), user (FK), created_date
+   - `Program` — name, batch_size (placeholder, to be populated later with real data)
+2. Register all models in Django Admin with list displays, filters, search.
+3. Seed initial categories: Courses & Subjects, Professors, Exams & Assignments, Internships & Placements, Clubs & Societies, Hostel/Campus Facilities, Events, Administrative Procedures, Study Resources, General Campus Queries.
+4. **Hardcoded college data** (from `college_details.txt`):
+   - College name, addresses (Sec-62 & Sec-128 campuses), contact numbers
+   - Dean/HoD details (Prof. Vikas Saxena, Prof. Alka Tripathi, etc.)
+   - Chancellor, Pro-Chancellor, Vice-Chancellor, Registrar
+   - College website: `https://www.jiit.ac.in/`
+   - Web portal: `https://webportal.jiit.ac.in/jiitwebkiosk/`
+5. **"About JIIT" / College Info page** displaying all hardcoded data.
+6. **Programs Offered page** — placeholder section showing the `Program` model data; you will provide batch sizes later.
+
+**Deliverable:** Fully migrated database; admin can CRUD all entities; college info page live.
+
+---
+
+## Phase 3 — Question Management
+**Goal:** Students can create, edit, delete, and browse questions (login required to create/edit/delete).
+
+1. **Create Question** — form with title, description, category dropdown, tags input; auto-assign a **randomly generated anonymous display name** (e.g., "Mystic Panda #73"). Login required.
+2. **Question List** — paginated list; filter by category; sort by date/popularity. **Visible to all** (including unauthenticated visitors).
+3. **Question Detail** — full question view with answers listed below. **Visible to all.**
+4. **Edit / Delete** — only the original author; login required.
+5. **Status** — questions can be marked as "Resolved" by the author.
+
+**Deliverable:** Full question CRUD with anonymous identity; public browsing for non-logged-in users.
+
+---
+
+## Phase 4 — Answer Management & Community Validation
+**Goal:** Anonymous answering + voting + confirmations (all login-gated).
+
+1. **Add Answer** — form on question detail page; randomly generated anonymous contributor name. Login required.
+2. **Edit / Delete** — only the original contributor can modify their answers.
+3. **Helpful / Unhelpful Voting** — one vote per user per answer; AJAX-based toggle. Login required.
+4. **Confirmation** — separate "I can confirm this" button (distinct from helpful vote); tracks confirmation_count. Login required.
+5. **Contributor Reputation** — computed score based on helpful votes and confirmations received; badge display (e.g., "Helpful Contributor", "Trusted Voice").
+
+**Deliverable:** Full answer CRUD + voting + confirmation system; all engagement requires login.
+
+---
+
+## Phase 5 — Search & Recommendation (AJAX)
+**Goal:** Live search and similar-question suggestions.
+
+1. **Keyword Search** — search bar on dashboard; queries against question title, description, tags. Available to all users.
+2. **AJAX Live Search** — as user types in the search bar, show matching results dynamically (no page reload).
+3. **Similar Question Suggestions** — when creating a new question, show similar existing questions via AJAX as the user types the title (to reduce duplicates).
+4. **Filtering** — filter results by category, tags, status (open/resolved).
+5. **Sorting** — by date, popularity (vote count), number of answers.
+
+**Deliverable:** Fully functional search with AJAX live results and duplicate-reduction suggestions.
+
+---
+
+## Phase 6 — Dashboard & Moderation
+**Goal:** Public dashboard + content reporting (login-gated) + admin moderation.
+
+1. **Dashboard / Home Page** — sections for: Recent Questions, Popular Questions, Unanswered Questions, Trending Categories. **Visible to all visitors.**
+2. **Report System** — "Report" button on questions and answers; user provides a reason; creates a Report entry. **Login required.**
+3. **Admin Moderation** — Django admin panel to review reports, hide/remove content, manage user accounts. **Superuser only.**
+4. **Category Management** — admin can add/edit/delete categories.
+
+**Deliverable:** Dashboard with overview sections; full report → review → resolve workflow.
+
+---
+
+## Phase 7 — Reporting (CSV & PDF) — Superuser Only
+**Goal:** Generate downloadable reports (superuser access only).
+
+1. **CSV Reports** — superuser can export: questions by category, activity stats (questions/answers per time period), validation stats.
+2. **PDF Reports** — using `ReportLab`: formatted summary reports with topic distribution, activity overview, top contributors (anonymous IDs only).
+3. **Report views** accessible from a dedicated admin reports page (superuser-gated).
+
+**Deliverable:** Downloadable CSV and PDF reports for superusers.
+
+---
+
+## Phase 8 — Polish & Documentation
+**Goal:** Final cleanup + required deliverables.
+
+1. Minimal but clean Bootstrap styling across all pages.
+2. **README.md** — how to set up the virtual environment, install dependencies, configure Google OAuth credentials, run migrations, start the Django server.
+3. **requirements.txt** — all Python packages.
+4. **FEATURES.md** — detailed list of all features, how they're implemented, and their working.
+5. Final testing of all flows end-to-end.
+6. All files created inside `/home/aarushb/Documents/CampusLore/`.
+
+---
+
+## Proposed Django App Structure
+```
+CampusLore/
+├── campuslore/              # Django project settings
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── core/                    # Main application
+│   ├── models.py            # All models (User, Question, Answer, Vote, etc.)
+│   ├── views.py             # Views
+│   ├── urls.py              # URL routing
+│   ├── forms.py             # Django forms
+│   ├── admin.py             # Admin config
+│   ├── adapters.py          # Custom allauth adapter (email restriction)
+│   ├── college_data.py      # Hardcoded JIIT data (departments, HoDs, links)
+│   ├── anon_names.py        # Random anonymous name generator
+│   ├── templatetags/        # Custom template tags
+│   ├── management/
+│   │   └── commands/        # seed_categories, seed_programs
+│   └── templates/
+│       └── core/
+│           ├── base.html
+│           ├── home.html         # Dashboard (public)
+│           ├── login.html
+│           ├── profile.html
+│           ├── profile_complete.html  # Mandatory branch/year
+│           ├── college_info.html      # About JIIT page
+│           ├── programs.html          # Programs & batch sizes
+│           ├── question_list.html
+│           ├── question_detail.html
+│           ├── question_form.html
+│           └── reports/               # Superuser report pages
+├── static/
+│   ├── css/
+│   └── js/
+├── manage.py
+├── requirements.txt
+├── README.md
+└── FEATURES.md
+```
+
+---
+
+## Note on Google OAuth Credentials
+
+> [!WARNING]
+> Google OAuth requires a **Client ID & Client Secret** from the Google Cloud Console. I will set up `django-allauth` with the Google provider and include instructions in the README for you to plug in your own credentials. During development, you can also create a superuser via `manage.py createsuperuser` to test functionality without OAuth.

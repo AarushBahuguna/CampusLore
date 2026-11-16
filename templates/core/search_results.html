@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">
+    <i class="bi bi-search"></i>
+    {% if query %}Search Results for "{{ query }}"{% else %}Search{% endif %}
+</h3>
+
+<!-- Search & Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <input type="text" name="q" class="form-control" value="{{ query }}"
+                       placeholder="Search questions...">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}"
+                        {% if current_category == cat.pk|stringformat:"d" %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="open" {% if current_status == "open" %}selected{% endif %}>Open</option>
+                    <option value="resolved" {% if current_status == "resolved" %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results -->
+<p class="text-muted">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }} found</p>
+
+{% for q in page_obj %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5>
+            <a href="{% url 'question_detail' pk=q.pk %}" class="text-decoration-none">
+                {{ q.title }}
+            </a>
+        </h5>
+        <p class="text-muted mb-2">{{ q.description|truncatewords:30 }}</p>
+        <div>
+            <span class="badge bg-secondary">{{ q.category.name }}</span>
+            <span class="badge badge-status-{{ q.status }}">{{ q.status }}</span>
+            <span class="badge bg-primary">{{ q.num_answers }} answers</span>
+            <small class="text-muted ms-2">
+                <span class="anon-name">{{ q.anon_display_name }}</span>
+                &middot; {{ q.created_date|timesince }} ago
+            </small>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-search" style="font-size: 3rem;"></i>
+    <p class="mt-2">No questions found{% if query %} for "{{ query }}"{% endif %}.</p>
+</div>
+{% endfor %}
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?q={{ query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

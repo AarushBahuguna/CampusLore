@@ -1,0 +1,29 @@
+/* CampusLore - Minimal Styles */
+/* Most styling comes from Bootstrap CDN. This file is for custom overrides only. */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.anon-name {
+    color: #6f42c1;
+    font-weight: 600;
+}
+
+.badge-status-open {
+    background-color: #198754;
+}
+
+.badge-status-resolved {
+    background-color: #0d6efd;
+}
+
+.badge-status-closed {
+    background-color: #6c757d;
+}
