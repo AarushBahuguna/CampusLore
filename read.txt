@@ -1,0 +1,200 @@
+CampusLore – Project Theory and Viva Preparation Notes
+
+CampusLore is a Reddit-style anonymous Q&A web application designed for students of Jaypee Institute of Information Technology (JIIT), Noida. The project allows visitors to browse public content, but only authenticated JIIT students can participate in discussion-related activities such as asking questions, answering, voting, confirming answers, or reporting inappropriate posts. The key idea behind the project is to create a safe and anonymous community where students can share knowledge and campus-related information without revealing identity.
+
+The platform is inspired by Reddit in terms of structure and user interaction. A user can view questions, browse categories, search content, and read answers without logging in. However, to create or interact with content, the user must be authenticated with a valid college email address. This ensures that the community remains restricted to the intended audience and helps maintain trust, relevance, and authenticity.
+
+Project Objective
+
+The main objective of CampusLore is to provide a student-focused information-sharing system for JIIT. It aims to solve the problem of scattered campus knowledge, where students often ask questions about courses, faculty, placements, exams, and campus life through different informal channels. CampusLore organizes all this into a single platform where students can ask anonymously and get help from peers.
+
+The major goals of the project are:
+
+- Build a Reddit-like anonymous discussion platform
+- Restrict access to JIIT students using college email authentication
+- Allow students to post questions and answers anonymously
+- Promote community trust through voting and confirmation systems
+- Provide a public dashboard for browsing campus-related content
+- Create a profile completion flow for branch and year information
+- Support moderation and reporting for inappropriate content
+- Display hardcoded JIIT information, departments, and program data
+- Provide admin-level reporting features
+
+Why the Project is Needed
+
+College life involves many practical questions: which professor teaches a course, how to prepare for an exam, which branch is better for certain interests, where to find resources, how placements work, and what students think about hostel life or campus events. Students often hesitate to ask such questions publicly because of identity concerns. CampusLore solves this by allowing anonymous discussion while keeping access limited to college students.
+
+The project therefore serves as a knowledge-sharing and peer-support platform for students to collaborate, clarify doubts, and exchange helpful information without social pressure.
+
+System Design and Architecture
+
+CampusLore is built using Django, a high-level Python web framework. Django follows the MVC pattern in a slightly adapted form called MVT (Model-View-Template). In this project:
+
+- Models define the database structure
+- Views contain application logic and handle requests
+- Templates render the HTML pages shown to users
+- URLs route requests to the correct view
+- Forms handle user input for profile completion, questions, answers, and reports
+
+The project uses SQLite for development, which is lightweight and suitable for small-scale academic projects. The main application is the core app where most of the logic is implemented.
+
+The database contains entities such as users, questions, answers, votes, confirmations, reports, categories, and programs. Each of these is represented as a Django model. A custom user model is used to extend the default Django user model and add student-specific fields like branch, year, account status, and reputation score.
+
+Authentication and Authorization
+
+Authentication is handled using Django-allauth, which integrates OAuth-based login with Django. The project specifically enables Google login and restricts it to students whose email ends with @mail.jiit.ac.in. The email restriction is implemented using a custom adapter, so only valid JIIT students can sign in.
+
+Students who are new to the platform are redirected to a profile completion page after login. They must fill in their branch and academic year before they can access full platform features. This ensures the profile is relevant and helps in personalization.
+
+Guest users can still browse the public pages and read content, but cannot create questions, post answers, vote, confirm, or report content. This mirrors the Reddit-style rule where reading is open but contribution requires login.
+
+Anonymous Contribution Model
+
+One of the most important features of the project is anonymity. When a user submits a question or answer, the system generates a random anonymous display name such as “Curious Owl” or “Silent Fox” instead of using their real identity. This allows students to ask questions freely without revealing their names.
+
+This design helps reduce hesitation and encourages participation. Even though the user is authenticated to the platform, the public content remains anonymous from other viewers.
+
+Profile Completion Flow
+
+The profile completion mechanism is used to capture essential academic information after Google login. Users must complete their branch and year fields. This information is stored in the custom user model and helps show relevant content and personalize the experience.
+
+The profile completion form is mandatory. If a user tries to proceed without completing it, the middleware redirects them to the profile page. This ensures that every valid student profile has the required academic context before they can use the full application.
+
+Question and Answer System
+
+The platform supports question posting as the core content format. Each question has:
+
+- title
+- description
+- category
+- tags
+- author
+- anonymous display name
+- status
+- creation date
+- answer count
+
+Questions are grouped under categories such as Courses & Subjects, Professors, Exams & Assignments, Placements, Clubs & Societies, Hostel/Campus Facilities, Events, General Campus Queries, and others.
+
+Answers are attached to a question and can also be posted anonymously. Students can answer questions and contribute to the community. The answer model tracks metadata like helpful votes, confirmation counts, and the anonymous name of the contributing student.
+
+Voting and Reputation Model
+
+To encourage quality and reliability, answers can be upvoted or marked as unhelpful. A user can vote once on an answer. The system calculates a helpful score and updates the answer’s relevant counters. The reputation score of the contributor increases when their answer receives helpful votes and confirmations.
+
+This creates a lightweight social validation system. Students can trust answers that receive positive feedback and confirmations from others. It also motivates good-quality participation and knowledge sharing.
+
+Confirmation System
+
+The project includes a confirmation mechanism distinct from the normal helpful vote. When another student confirms that an answer is accurate, the answer’s confirmation count increases and the contributor’s reputation is boosted. This allows the platform to value peer validation, which is especially useful in academic communities where students often rely on shared experiences.
+
+Reporting and Moderation
+
+CampusLore includes a reporting system to handle spam, offensive posts, misinformation, duplicated content, or other issues. Users can report questions or answers, and the report is stored with a reason and status. Superusers can review those reports in the admin interface and take moderation actions.
+
+The moderation function is important because anonymous systems need stronger safeguards against abuse. With reports and admin review, the platform remains safe and useful for the student community.
+
+College Data and Program Information
+
+The project includes hardcoded JIIT-specific data such as:
+
+- college name and short name
+- campus details
+- leadership information
+- department heads
+- official JIIT links
+- program list and batch size metadata
+
+This data is stored in the college_data.py file and is displayed through the college information and programs pages. It makes the system feel realistic and relevant to JIIT students instead of being a generic forum.
+
+The programs page displays details such as the name of the program, short name, department, duration, and seat counts. This is useful for students checking course options and academic structure.
+
+Search and Dashboard
+
+The application has a dashboard or homepage that displays recent questions, popular questions, and unanswered queries. This helps users quickly view active discussions and trending topics. Search functionality lets students look up keywords in titles, descriptions, and tags.
+
+Such a dashboard acts as the community landing page, making the platform more dynamic and interactive. It also reduces the need to browse manually through multiple categories.
+
+Admin Features
+
+The Django admin panel allows superusers to manage users, questions, answers, reports, categories, and programs. Superusers can also access report generation and export features. This is useful for academic project evaluation and moderation management.
+
+The admin side ensures the platform is not only user-facing but also maintainable by administrators. Data can be reviewed, modified, and exported when needed.
+
+CSV and PDF Export
+
+One advanced feature of the project is the generation of reports. Superusers can export information as CSV or PDF for analysis. These exports may include user activity, question counts, answer metrics, or other statistical summaries.
+
+This denotes a real-world application aspect, where administrators need reporting for moderation, monitoring, and academic analysis.
+
+Security and Access Control
+
+CampusLore includes several security-oriented practices:
+
+- Restriction to JIIT email addresses
+- Login required for engagement actions
+- Profile completeness checks
+- Admin-only moderation tools
+- Validation checks in forms
+
+The project uses Django’s built-in security features and custom rules to ensure users do not bypass the intended campus-only access restrictions.
+
+Challenges and Learning Outcomes
+
+During development, some of the key challenges are implementing a custom user model, enforcing email restrictions, integrating Google OAuth, handling anonymous display names, and designing moderation logic. The project also demonstrates how to connect database models with UI forms and templates in a real-world web application.
+
+The project is useful for learning Django fundamentals, authentication, role-based access, data modeling, forms, templates, and application structure. It also introduces practical design thinking for building a campus-facing social platform.
+
+Future Scope
+
+The project can be expanded in several ways:
+
+- add more advanced search filters and sorting
+- implement notifications and email reminders
+- add badges and achievements for top contributors
+- build a more responsive frontend design
+- enable full admin moderation actions such as deletion and content hiding
+- add analytics dashboard for admins
+- create a complete deployment setup with environment variables and production hosting
+
+Conclusion
+
+CampusLore is a student-centered anonymous Q&A platform that combines community interaction, academic relevance, and safe access control. It is designed to allow JIIT students to ask questions freely while preserving identity privacy and ensuring content quality through voting, confirmation, and moderation.
+
+The project demonstrates how modern web technologies can be used to solve a practical problem in a university environment. It connects real user needs with technical implementation and presents a functioning example of a campus information-sharing ecosystem.
+
+Viva-Preparation Questions
+
+1. What is CampusLore and what problem does it solve?
+2. Why is the project based on Reddit-style interaction?
+3. How does the platform restrict access to JIIT students only?
+4. What is the purpose of Google OAuth in this project?
+5. Why do you use a custom user model instead of the default Django user?
+6. What is the role of the profile completion page?
+7. How is anonymity implemented in the platform?
+8. What are the major models in the application?
+9. How do questions and answers relate to each other in the database?
+10. What is the purpose of voting in the project?
+11. What is the difference between a helpful vote and a confirmation?
+12. How does the reputation system work?
+13. Why is a reporting system necessary in an anonymous platform?
+14. How do admins moderate user-generated content?
+15. What is the role of categories in the application?
+16. How does search help improve usability?
+17. What is the use of hardcoded college data?
+18. Why is the programs page important for students?
+19. What is the purpose of the dashboard homepage?
+20. How is authentication different from authorization in the project?
+21. Which technologies are used in the backend and frontend?
+22. Why is SQLite used for development instead of PostgreSQL or MySQL?
+23. What is the purpose of django-allauth in this project?
+24. How does the custom adapter enforce the @mail.jiit.ac.in email rule?
+25. What are the benefits of using a custom middleware for profile completion?
+26. What challenges did you face while implementing Google login?
+27. How would you improve the project in the future?
+28. Why is moderation important in a campus discussion platform?
+29. What is the significance of anonymous names for student participation?
+30. How does the project balance privacy and accountability?
+
+
+This file is intended to help you revise the project conceptually before a viva or demonstration. You can answer these questions in your own words during the interview.

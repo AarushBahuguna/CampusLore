@@ -15,7 +15,7 @@ from .anon_names import generate_anon_name
 class CustomUser(AbstractUser):
     """Custom user model for CampusLore students."""
     college_email = models.EmailField(unique=True, blank=True, null=True)
-    branch = models.CharField(max_length=10, choices=BRANCH_CHOICES, blank=True)
+    branch = models.CharField(max_length=25, choices=BRANCH_CHOICES, blank=True)
     year = models.IntegerField(choices=YEAR_CHOICES, null=True, blank=True)
     account_status = models.CharField(
         max_length=20,
